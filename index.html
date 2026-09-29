@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fan Notch — Live Sports Ticker for MacBook Notch</title>
+  <meta name="description" content="Turn your MacBook notch into a live sports ticker. Follow cricket, F1, tennis, football, and basketball right in your menu bar.">
+  <style>
+    /* Reset & Base */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    html {
+      scroll-behavior: smooth;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #070709;
+      color: #f1f5f9;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      overflow-x: hidden;
+      line-height: 1.5;
+    }
+
+    ::selection {
+      background: rgba(245, 158, 11, 0.25);
+      color: #fde68a;
+    }
+
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
+    }
+
+    .container {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      width: 100%;
+      height: 64px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(12, 13, 16, 0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: flex;
+      align-items: center;
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 1.15rem;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-notch {
+      width: 22px;
+      height: 14px;
+      background: #1e2029;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 0 0 6px 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .brand-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #f59e0b;
+      box-shadow: 0 0 6px #f59e0b;
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+
+    nav a {
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: color 0.15s ease;
+    }
+
+    nav a:hover {
+      color: #ffffff;
+    }
+
+    @media (max-width: 768px) {
+      nav { display: none; }
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      border-radius: 10px;
+      padding: 8px 16px;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      cursor: pointer;
+      border: none;
+      white-space: nowrap;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary {
+      background: #f59e0b;
+      color: #09090b;
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+    }
+
+    .btn-primary:hover {
+      background: #fbbf24;
+      box-shadow: 0 0 26px rgba(245, 158, 11, 0.45);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.06);
+      color: #e2e8f0;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+    }
+
+    .btn-white {
+      background: #ffffff;
+      color: #09090b;
+    }
+
+    .btn-white:hover {
+      background: #e2e8f0;
+    }
+
+    .hero {
+      padding: 4.5rem 0 3.5rem;
+      text-align: center;
+      position: relative;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 0.75rem;
+      color: #cbd5e1;
+      margin-bottom: 1.5rem;
+    }
+
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+      animation: pulseLive 1.8s infinite;
+    }
+
+    @keyframes pulseLive {
+      0% { opacity: 0.4; }
+      50% { opacity: 1; }
+      100% { opacity: 0.4; }
+    }
+
+    h1 {
+      font-size: clamp(2.5rem, 5.5vw, 4.25rem);
+      font-weight: 800;
+      letter-spacing: -0.035em;
+      line-height: 1.08;
+      max-width: 820px;
+      margin: 0 auto;
+      color: #ffffff;
+      text-wrap: balance;
+    }
+
+    .hero-subhead {
+      font-size: clamp(1.05rem, 2vw, 1.25rem);
+      color: #94a3b8;
+      max-width: 640px;
+      margin: 1.25rem auto 0;
+      line-height: 1.6;
+      text-wrap: balance;
+    }
+
+    .hero-ctas {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .hero-meta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 1rem;
+    }
+
+    .macbook-container {
+      margin: 3.5rem auto 0;
+      max-width: 920px;
+      width: 100%;
+      position: relative;
+    }
+
+    .mac-controls-deck {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 16px;
+      margin-bottom: 12px;
+      background: rgba(18, 19, 24, 0.7);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      font-size: 0.75rem;
+    }
+
+    .segmented-control {
+      display: inline-flex;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 2px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .segment-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+
+    .segment-btn.active {
+      background: rgba(245, 158, 11, 0.2);
+      color: #fde68a;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      font-weight: 600;
+    }
+
+    .mac-screen {
+      position: relative;
+      aspect-ratio: 16 / 10;
+      width: 100%;
+      background: #090b10;
+      border: 12px solid #16171b;
+      border-radius: 26px 26px 0 0;
+      overflow: hidden;
+      box-shadow: 0 25px 60px -15px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.08);
+      user-select: none;
+    }
+
+    .mac-screen-bg {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.15), transparent 50%),
+                  radial-gradient(circle at 20% 80%, rgba(245, 158, 11, 0.08), transparent 50%),
+                  linear-gradient(135deg, #060810 0%, #0c1220 50%, #151025 100%);
+    }
+
+    .mac-menubar {
+      position: relative;
+      z-index: 20;
+      height: 34px;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      font-size: 0.75rem;
+      color: #cbd5e1;
+    }
+
+    .menubar-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+
+    .menubar-ticker-zone {
+      flex: 1;
+      margin: 0 12px;
+      overflow: hidden;
+      position: relative;
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+
+    .menubar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+      font-size: 0.7rem;
+      color: #94a3b8;
+    }
+
+    @keyframes marqueeScroll {
+      0% { transform: translate3d(0, 0, 0); }
+      100% { transform: translate3d(-50%, 0, 0); }
+    }
+
+    .marquee-track {
+      display: flex;
+      width: max-content;
+      will-change: transform;
+      animation: marqueeScroll 16s linear infinite;
+    }
+
+    .marquee-track.speed-normal {
+      animation-duration: 26s;
+    }
+
+    .marquee-track.speed-relaxed {
+      animation-duration: 42s;
+    }
+
+    .marquee-track.speed-static {
+      animation: none !important;
+      transform: none !important;
+      margin: 0 auto;
+    }
+
+    .ticker-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      color: #f8fafc;
+      transition: background 0.15s ease;
+      white-space: nowrap;
+      font-size: 0.75rem;
+    }
+
+    .ticker-chip:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: #fbbf24;
+    }
+
+    .score-glow {
+      text-shadow: 0 0 10px rgba(251, 191, 36, 0.35);
+    }
+
+    .mac-notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 160px;
+      height: 24px;
+      background: #000000;
+      border-radius: 0 0 12px 12px;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      border-left: 1px solid rgba(255, 255, 255, 0.06);
+      border-right: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .notch-sensor {
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: #1a2030;
+    }
+
+    .notch-camera {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #060810;
+      border: 1px solid #22293e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .notch-camera::after {
+      content: '';
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: #0d162e;
+    }
+
+    .notch-led {
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: rgba(16, 185, 129, 0.6);
+      box-shadow: 0 0 4px #10b981;
+    }
+
+    .mac-base {
+      position: relative;
+      margin: 0 -2%;
+      height: 18px;
+      background: linear-gradient(to bottom, #2b2c32, #1b1c21 60%, #101115);
+      border-radius: 0 0 16px 16px;
+      box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.9);
+      display: flex;
+      justify-content: center;
+    }
+
+    .mac-notch-indent {
+      width: 110px;
+      height: 9px;
+      background: #090a0d;
+      border-radius: 0 0 8px 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .match-popover {
+      display: none;
+      position: absolute;
+      top: 42px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%;
+      max-width: 480px;
+      background: rgba(13, 14, 20, 0.95);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85);
+      z-index: 40;
+      text-align: left;
+    }
+
+    .match-popover.active {
+      display: block;
+      animation: popIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: translate(-50%, -8px) scale(0.96); }
+      to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+    }
+
+    .section {
+      padding: 6rem 0;
+    }
+
+    .section-title {
+      font-size: clamp(2rem, 3.5vw, 2.75rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      text-align: center;
+      color: #ffffff;
+      text-wrap: balance;
+    }
+
+    .section-desc {
+      text-align: center;
+      font-size: 1rem;
+      color: #94a3b8;
+      max-width: 580px;
+      margin: 0.75rem auto 3rem;
+      text-wrap: balance;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .feature-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 32px 28px;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .feature-card:hover {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 255, 255, 0.14);
+    }
+
+    .feature-icon-box {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      font-size: 1.25rem;
+    }
+
+    .feature-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 8px;
+    }
+
+    .feature-text {
+      font-size: 0.875rem;
+      color: #94a3b8;
+      line-height: 1.6;
+    }
+
+    .feature-meta {
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 0.75rem;
+      color: #64748b;
+      display: flex;
+      gap: 8px;
+    }
+
+    .sports-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 16px;
+    }
+
+    .sport-tile {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: left;
+    }
+
+    .sport-tile:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(245, 158, 11, 0.35);
+      transform: translateY(-2px);
+    }
+
+    .sport-tile-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .sport-name {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #94a3b8;
+      font-weight: 600;
+    }
+
+    .sport-status-chip {
+      font-size: 0.65rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .sport-score {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 4px;
+    }
+
+    .sport-event {
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    .pricing-card {
+      border-radius: 24px;
+      padding: 36px 32px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .pricing-card.pro {
+      border-color: rgba(245, 158, 11, 0.4);
+      background: linear-gradient(180deg, rgba(245, 158, 11, 0.06) 0%, rgba(255, 255, 255, 0.01) 100%);
+      box-shadow: 0 0 50px rgba(245, 158, 11, 0.08);
+      position: relative;
+    }
+
+    .pro-badge {
+      position: absolute;
+      top: -12px;
+      right: 28px;
+      background: #f59e0b;
+      color: #09090b;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 9999px;
+    }
+
+    .price-num {
+      font-size: 2.75rem;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.03em;
+    }
+
+    .price-features {
+      list-style: none;
+      margin: 28px 0;
+      font-size: 0.8125rem;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      color: #cbd5e1;
+    }
+
+    .price-features li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 5rem 0 3rem;
+      background: rgba(0, 0, 0, 0.6);
+    }
+
+    .footer-cta-box {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 28px;
+      padding: 48px 24px;
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .footer-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      font-size: 0.75rem;
+      color: #64748b;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <header>
+    <div class="container header-inner">
+      <a href="#" class="brand">
+        <div class="brand-notch">
+          <div class="brand-dot"></div>
+        </div>
+        <span>Fan Notch</span>
+      </a>
+
+      <nav>
+        <a href="#macbook-demo">Notch Ticker</a>
+        <a href="#features">Features</a>
+        <a href="#sports">Sports Coverage</a>
+        <a href="#pricing">Pricing</a>
+      </nav>
+
+      <div>
+        <button onclick="downloadApp()" class="btn btn-white">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Download for Mac</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero container">
+    <div class="badge-pill">
+      <div class="pulse-dot"></div>
+      <span class="tabular-nums">v1.4 Universal Binary</span>
+      <span style="color:#475569">·</span>
+      <span>macOS 13+ Ventura, Sonoma, Sequoia</span>
+    </div>
+
+    <h1>Your scores. Right in the notch.</h1>
+
+    <p class="hero-subhead">
+      Live sports, scrolling where you already look. No tabs, no refreshing, no distractions.
+    </p>
+
+    <div class="hero-ctas">
+      <button onclick="downloadApp()" class="btn btn-primary" style="padding: 12px 24px; font-size: 0.9375rem;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Download for Mac</span>
+      </button>
+
+      <a href="#macbook-demo" class="btn btn-secondary" style="padding: 12px 24px; font-size: 0.9375rem;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+        <span>See it in action</span>
+      </a>
+    </div>
+
+    <div class="hero-meta">
+      <span>Free trial</span>
+      <span>·</span>
+      <span>Native Swift & Metal</span>
+      <span>·</span>
+      <span>Zero CPU overhead (&lt;0.2%)</span>
+    </div>
+
+    <!-- MacBook Mockup with Infinite Marquee Notch -->
+    <div id="macbook-demo" class="macbook-container">
+      <div class="mac-controls-deck">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="color: #94a3b8; font-weight: 500;">Speed Dial:</span>
+          <div class="segmented-control">
+            <button class="segment-btn active" onclick="setSpeed('fast', this)">Bloomberg (Fast)</button>
+            <button class="segment-btn" onclick="setSpeed('normal', this)">Moderate</button>
+            <button class="segment-btn" onclick="setSpeed('relaxed', this)">Relaxed</button>
+            <button class="segment-btn" onclick="setSpeed('static', this)">Static Bar</button>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="color: #94a3b8; font-weight: 500;">Refresh:</span>
+          <div class="segmented-control">
+            <button class="segment-btn active" onclick="setRefresh('1s', this)">⚡ 1-sec</button>
+            <button class="segment-btn" onclick="setRefresh('15s', this)">15-sec</button>
+            <button class="segment-btn" onclick="setRefresh('1m', this)">1-min</button>
+            <button class="segment-btn" onclick="setRefresh('5m', this)">5-min</button>
+          </div>
+        </div>
+
+        <span style="color: #f59e0b; font-size: 0.75rem;">• Tap any score to expand</span>
+      </div>
+
+      <div class="mac-screen">
+        <div class="mac-screen-bg"></div>
+
+        <div class="mac-notch">
+          <div class="notch-sensor"></div>
+          <div class="notch-camera"></div>
+          <div class="notch-led"></div>
+        </div>
+
+        <div class="mac-menubar">
+          <div class="menubar-left">
+            <span style="color: #ffffff;"></span>
+            <span style="font-weight: 600; color: #ffffff;">Fan Notch</span>
+            <span>Sports</span>
+            <span>Window</span>
+          </div>
+
+          <div class="menubar-ticker-zone">
+            <div id="tickerTrack" class="marquee-track">
+              <!-- Set 1 -->
+              <div style="display: inline-flex; align-items: center; gap: 20px; padding-right: 20px;">
+                <span class="ticker-chip score-glow tabular-nums" onclick="showMatch('cricket')">
+                  <span style="color:#10b981;">●</span> IND 287/4 (44.2 ov)
+                </span>
+                <span style="color:#64748b;">•</span>
+                <span class="ticker-chip score-glow tabular-nums" onclick="showMatch('f1')">
+                  <span style="color:#10b981;">●</span> VER P1 (+3.42s)
+                </span>
+                <span style="color:#64748b;">•</span>
+                <span class="ticker-chip score-glow tabular-nums" onclick="showMatch('tennis')">
+                  <span style="color:#10b981;">●</span> Alcaraz 2-1* (40-30)
+                </span>
+                <span style="color:#64748b;">•</span>
+                <span class="ticker-chip score-glow tabular-nums" onclick="showMatch('football')">
+                  <span style="color:#10b981;">●</span> ARS 2-1 MCI (78')
+                </span>
+                <span style="color:#64748b;">•</span>
+                <span class="ticker-chip score-glow tabular-nums" onclick="showMatch('basketball')">
+                  <span style="color:#10b981;">●</span> LAL 108-104 BOS (Q4 1:12)
+                </span>
+                <span style="color:#64748b;">•</span>
+              </div>
+
+              <!-- Set 2 -->
+              <div style="display: inline-flex; align-items: center; gap: 20px; padding-right: 20px;" aria-hidden="true">
+                <span class="ticker-chip score-glow tabular-nums" onclick="showMatch('cricket')">
+                  <span style="color:#10b981;">●</span> IND 287/4 (44.2 ov)
+                </span>
+                <span style="color:#64748b;">•</span>
+                <span class="ticker-chip score-glow tabular-nums" onclick="showMatch('f1')">
+                  <span style="color:#10b981;">●</span> VER P1 (+3.42s)
+                </span>
+                <span style="color:#64748b;">•</span>
+                <span class="ticker-chip score-glow tabular-nums" onclick="showMatch('tennis')">
+                  <span style="color:#10b981;">●</span> Alcaraz 2-1* (40-30)
+                </span>
+                <span style="color:#64748b;">•</span>
+                <span class="ticker-chip score-glow tabular-nums" onclick="showMatch('football')">
+                  <span style="color:#10b981;">●</span> ARS 2-1 MCI (78')
+                </span>
+                <span style="color:#64748b;">•</span>
+                <span class="ticker-chip score-glow tabular-nums" onclick="showMatch('basketball')">
+                  <span style="color:#10b981;">●</span> LAL 108-104 BOS (Q4 1:12)
+                </span>
+                <span style="color:#64748b;">•</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="menubar-right tabular-nums">
+            <span id="rateLabel" style="color: #10b981; font-weight: 600;">1S LIVE</span>
+            <span>100% ⚡</span>
+            <span>9:41 AM</span>
+          </div>
+        </div>
+
+        <div id="matchPopover" class="match-popover">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+            <div>
+              <span id="popBadge" style="font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 600; text-transform: uppercase;"></span>
+              <h4 id="popTitle" style="font-size: 1.15rem; font-weight: 700; color: #ffffff; margin-top: 4px;"></h4>
+              <p id="popSubtitle" style="font-size: 0.75rem; color: #94a3b8;"></p>
+            </div>
+            <button onclick="closeMatch()" style="background: transparent; border: none; color: #94a3b8; font-size: 1.25rem; cursor: pointer;">&times;</button>
+          </div>
+
+          <div style="background: rgba(0,0,0,0.5); padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 12px;">
+            <div id="popScore" class="tabular-nums" style="font-size: 1.4rem; font-weight: 800; color: #f59e0b;"></div>
+            <div id="popSituation" style="font-size: 0.75rem; color: #10b981; margin-top: 4px; font-weight: 500;"></div>
+          </div>
+
+          <div id="popStats" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.75rem; margin-bottom: 12px;"></div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px; font-size: 0.7rem; color: #94a3b8;">
+            <span>Sequence: <strong id="popSequence" class="tabular-nums" style="color: #ffffff;"></strong></span>
+            <span style="color: #f59e0b;">Fan Notch Telemetry</span>
+          </div>
+        </div>
+
+        <div style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 80%; max-width: 440px; background: rgba(0,0,0,0.6); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 14px; text-align: left;">
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: #ff5f56; display: inline-block;"></span>
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: #ffbd2e; display: inline-block;"></span>
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: #27c93f; display: inline-block;"></span>
+            <span style="font-size: 0.7rem; color: #94a3b8; margin-left: 6px;">Fan Notch Sports Feed Engine</span>
+          </div>
+          <p style="font-size: 0.75rem; color: #cbd5e1; line-height: 1.4;">
+            Tracking 5 active fixtures in your menu bar. Click any score above in the notch to expand live ball-by-ball analysis.
+          </p>
+        </div>
+      </div>
+
+      <div class="mac-base">
+        <div class="mac-notch-indent"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 2: Features -->
+  <section id="features" class="section container">
+    <h2 class="section-title">Engineered for the notch. Tuned for speed.</h2>
+    <p class="section-desc">Designed natively in Swift with Metal acceleration for sub-second sports updates.</p>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div>
+          <div class="feature-icon-box" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">🏆</div>
+          <h3 class="feature-title">Follow any match</h3>
+          <p class="feature-text">
+            Handpick tournaments, marquee clashes, or follow your favorite club, driver, or player automatically. Mix cricket, F1, tennis, football, and basketball in a single stream.
+          </p>
+        </div>
+        <div class="feature-meta">
+          <span>Global Sports Feeds</span>
+          <span>·</span>
+          <span>Zero Tabs</span>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div>
+          <div class="feature-icon-box" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">⚡</div>
+          <h3 class="feature-title">Your refresh, your rules</h3>
+          <p class="feature-text">
+            From sub-second live websocket feeds during penalty shootouts and final overs, to calm 5-minute pulses when you're working on battery power.
+          </p>
+        </div>
+        <div class="feature-meta">
+          <span>Live 1s to 5m Eco</span>
+          <span>·</span>
+          <span>Dynamic Throttle</span>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div>
+          <div class="feature-icon-box" style="background: rgba(56, 189, 248, 0.1); color: #38bdf8;">📊</div>
+          <h3 class="feature-title">Speed dial: Bloomberg-fast to static</h3>
+          <p class="feature-text">
+            Crank the ticker velocity to a Wall Street trading floor clip, glide at a glanceable ambient pace, or lock it into an unmoving static bar that only blinks on scores.
+          </p>
+        </div>
+        <div class="feature-meta">
+          <span>Velocity Control</span>
+          <span>·</span>
+          <span>Pinned Static Option</span>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div>
+          <div class="feature-icon-box" style="background: rgba(168, 85, 247, 0.1); color: #c084fc;">🔍</div>
+          <h3 class="feature-title">Tap to expand the full match card</h3>
+          <p class="feature-text">
+            One click on the notch drops down box scores, ball-by-ball commentary, driver telemetry, shot maps, and xG momentum without interrupting your focus.
+          </p>
+        </div>
+        <div class="feature-meta">
+          <span>Native Popover</span>
+          <span>·</span>
+          <span>Deep Telemetry</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: Sports Grid -->
+  <section id="sports" class="section container">
+    <h2 class="section-title">Coverage across all major sports</h2>
+    <p class="section-desc">Tap any match card below to inspect telemetry and preview it directly in the notch ticker.</p>
+
+    <div class="sports-grid">
+      <div class="sport-tile" onclick="showMatch('cricket')">
+        <div class="sport-tile-header">
+          <span class="sport-name">Cricket</span>
+          <span class="sport-status-chip" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">44.2 OV</span>
+        </div>
+        <div class="sport-score tabular-nums">IND 287/4</div>
+        <div class="sport-event">ICC Champions Trophy Final · vs AUS 284</div>
+      </div>
+
+      <div class="sport-tile" onclick="showMatch('f1')">
+        <div class="sport-tile-header">
+          <span class="sport-name">Formula 1</span>
+          <span class="sport-status-chip" style="background: rgba(239, 68, 68, 0.15); color: #ef4444;">LAP 52/72</span>
+        </div>
+        <div class="sport-score tabular-nums">VER P1 (+3.42s)</div>
+        <div class="sport-event">Dutch Grand Prix · Circuit Zandvoort</div>
+      </div>
+
+      <div class="sport-tile" onclick="showMatch('tennis')">
+        <div class="sport-tile-header">
+          <span class="sport-name">Tennis</span>
+          <span class="sport-status-chip" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">SET 3 (40-30)</span>
+        </div>
+        <div class="sport-score tabular-nums">Alcaraz 2-1*</div>
+        <div class="sport-event">Roland Garros Semifinal · vs Sinner</div>
+      </div>
+
+      <div class="sport-tile" onclick="showMatch('football')">
+        <div class="sport-tile-header">
+          <span class="sport-name">Football</span>
+          <span class="sport-status-chip" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8;">78' LIVE</span>
+        </div>
+        <div class="sport-score tabular-nums">ARS 2 - 1 MCI</div>
+        <div class="sport-event">Premier League · Saka 24', Havertz 67'</div>
+      </div>
+
+      <div class="sport-tile" onclick="showMatch('basketball')">
+        <div class="sport-tile-header">
+          <span class="sport-name">Basketball</span>
+          <span class="sport-status-chip" style="background: rgba(168, 85, 247, 0.15); color: #c084fc;">Q4 1:12</span>
+        </div>
+        <div class="sport-score tabular-nums">LAL 108 - 104</div>
+        <div class="sport-event">NBA Regular Season · vs Celtics</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 4: Pricing -->
+  <section id="pricing" class="section container">
+    <h2 class="section-title">Simple, transparent pricing</h2>
+    <p class="section-desc">Try Fan Notch free forever, or upgrade to Pro for real-time live feeds and unlimited slots.</p>
+
+    <div class="pricing-grid">
+      <div class="pricing-card">
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="font-size: 1.25rem; font-weight: 700; color: #ffffff;">Free</h3>
+            <span style="font-size: 0.75rem; color: #94a3b8; font-family: monospace;">FOREVER</span>
+          </div>
+          <p style="font-size: 0.8125rem; color: #94a3b8; margin-top: 8px;">For casual fans following a single team.</p>
+
+          <div style="margin-top: 24px;">
+            <span class="price-num tabular-nums">$0</span>
+          </div>
+
+          <ul class="price-features">
+            <li><span>✓</span> 1 active match slot at a time</li>
+            <li><span>✓</span> 5-minute refresh frequency</li>
+            <li><span>✓</span> Standard marquee speed</li>
+            <li><span>✓</span> Basic match expansion card</li>
+            <li style="color: #64748b;"><span>✕</span> No sub-second live refresh</li>
+            <li style="color: #64748b;"><span>✕</span> No multi-sport mix</li>
+          </ul>
+        </div>
+
+        <button onclick="downloadApp()" class="btn btn-secondary" style="width: 100%; padding: 12px;">
+          Download Free
+        </button>
+      </div>
+
+      <div class="pricing-card pro">
+        <div class="pro-badge">Most Popular</div>
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="font-size: 1.25rem; font-weight: 700; color: #ffffff;">Fan Notch Pro</h3>
+            <span style="font-size: 0.75rem; color: #f59e0b; font-family: monospace;">ALL-ACCESS</span>
+          </div>
+          <p style="font-size: 0.8125rem; color: #94a3b8; margin-top: 8px;">Sub-second telemetry for devoted sports purists.</p>
+
+          <div style="margin-top: 24px; display: flex; align-items: baseline; gap: 8px;">
+            <span class="price-num tabular-nums">$29</span>
+            <span style="font-size: 0.75rem; color: #94a3b8;">one-time lifetime license (or $4/month)</span>
+          </div>
+
+          <ul class="price-features">
+            <li><span style="color: #f59e0b;">✓</span> <strong>Unlimited match slots</strong></li>
+            <li><span style="color: #f59e0b;">✓</span> <strong>Sub-second live refresh (1s)</strong></li>
+            <li><span style="color: #f59e0b;">✓</span> <strong>Speed dial control (Bloomberg to static)</strong></li>
+            <li><span style="color: #f59e0b;">✓</span> <strong>Full telemetry box scores & charts</strong></li>
+            <li><span style="color: #f59e0b;">✓</span> Multi-sport simultaneous mix stream</li>
+            <li><span style="color: #f59e0b;">✓</span> Bloomberg, Neon, and OLED themes</li>
+            <li><span style="color: #f59e0b;">✓</span> Lifetime updates & Raycast extension</li>
+          </ul>
+        </div>
+
+        <button onclick="downloadApp()" class="btn btn-primary" style="width: 100%; padding: 12px;">
+          Get Lifetime Pro ($29)
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 5: Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-cta-box">
+        <h2 style="font-size: clamp(1.75rem, 3vw, 2.25rem); font-weight: 800; color: #ffffff; letter-spacing: -0.03em;">
+          Never miss another boundary, overtake, or match point.
+        </h2>
+        <p style="color: #94a3b8; font-size: 0.9375rem; max-width: 480px; margin: 12px auto 24px;">
+          Join thousands of sports purists tracking live scores right from their MacBook notch.
+        </p>
+        <button onclick="downloadApp()" class="btn btn-primary" style="padding: 12px 28px; font-size: 0.9375rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Download Fan Notch for Mac</span>
+        </button>
+        <div style="font-size: 0.75rem; color: #64748b; margin-top: 14px; font-family: monospace;">
+          Universal Binary (Apple Silicon M1-M4 & Intel) · macOS 13+ · 8.4 MB
+        </div>
+      </div>
+
+      <div class="footer-meta">
+        <div>
+          <strong>Fan Notch</strong> — Designed for macOS
+        </div>
+        <div>
+          <span>© 2026 Fan Notch. All rights reserved. Not affiliated with Apple Inc.</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const matches = {
+      cricket: {
+        title: "India vs Australia",
+        sub: "ICC Champions Trophy Final · Ahmedabad",
+        score: "IND 287/4 (44.2 ov)",
+        situation: "India need 2 runs in 34 balls with 6 wickets in hand",
+        badge: "44.2 OVERS",
+        badgeColor: "#f59e0b",
+        stats: [
+          ["V. Kohli", "89* (74b, 8x4)"],
+          ["S. Gill", "62 (58b, 7x4)"],
+          ["M. Starc", "2/54 (9.2 ov)"],
+          ["Current RR", "6.48 (Req: 0.35)"]
+        ],
+        seq: "1 · 4 · 0 · 6 · 1 · 2"
+      },
+      f1: {
+        title: "Max Verstappen (Red Bull)",
+        sub: "Dutch Grand Prix · Circuit Zandvoort",
+        score: "VER P1 (Gap: +3.424s)",
+        situation: "Fastest lap sector 1 (22.41s Purple) · Tyre: Hard (21 laps)",
+        badge: "LAP 52/72",
+        badgeColor: "#ef4444",
+        stats: [
+          ["Interval P2", "+3.424s (Norris)"],
+          ["Interval P3", "+7.810s (Leclerc)"],
+          ["Pit Stops", "1 Completed"],
+          ["Speed Trap", "324.8 km/h"]
+        ],
+        seq: "S1 Purple · S2 Green · S3 Yellow"
+      },
+      tennis: {
+        title: "Carlos Alcaraz vs Jannik Sinner",
+        sub: "Roland Garros · Semifinal",
+        score: "6-4, 4-6, 2-1* (40-30)",
+        situation: "Break point saved with 132mph forehand winner",
+        badge: "SET 3 (40-30)",
+        badgeColor: "#10b981",
+        stats: [
+          ["Aces", "9 - 7"],
+          ["1st Serve %", "74% - 68%"],
+          ["Winners", "38 - 31"],
+          ["Unforced Errors", "14 - 19"]
+        ],
+        seq: "15-0 · 15-15 · 30-15 · 40-30"
+      },
+      football: {
+        title: "Arsenal vs Manchester City",
+        sub: "Premier League · Emirates Stadium",
+        score: "Arsenal 2 - 1 Manchester City",
+        situation: "Havertz header puts Arsenal ahead in 67th min",
+        badge: "78' LIVE",
+        badgeColor: "#38bdf8",
+        stats: [
+          ["Scorers (ARS)", "Saka 24', Havertz 67'"],
+          ["Scorer (MCI)", "Haaland 41'"],
+          ["Expected Goals", "1.84 xG - 1.62 xG"],
+          ["Possession", "51% - 49%"]
+        ],
+        seq: "24' Goal · 41' Goal · 67' Goal"
+      },
+      basketball: {
+        title: "LA Lakers vs Boston Celtics",
+        sub: "NBA Regular Season · Crypto.com Arena",
+        score: "LAL 108 - 104 BOS",
+        situation: "LeBron stepback 3-pointer puts Lakers ahead by 4",
+        badge: "Q4 1:12",
+        badgeColor: "#c084fc",
+        stats: [
+          ["LeBron James", "28 pts, 9 ast, 8 reb"],
+          ["Anthony Davis", "22 pts, 14 reb, 3 blk"],
+          ["Jayson Tatum", "31 pts, 7 reb"],
+          ["FG%", "49.4% - 46.8%"]
+        ],
+        seq: "105-104 · Miss · 108-104"
+      }
+    };
+
+    function showMatch(key) {
+      const data = matches[key];
+      if (!data) return;
+      document.getElementById('popTitle').innerText = data.title;
+      document.getElementById('popSubtitle').innerText = data.sub;
+      document.getElementById('popScore').innerText = data.score;
+      document.getElementById('popSituation').innerText = "• " + data.situation;
+      
+      const badge = document.getElementById('popBadge');
+      badge.innerText = data.badge;
+      badge.style.color = data.badgeColor;
+      badge.style.background = data.badgeColor + "20";
+      badge.style.border = "1px solid " + data.badgeColor + "40";
+
+      const statsEl = document.getElementById('popStats');
+      statsEl.innerHTML = data.stats.map(s => `
+        <div style="background:rgba(255,255,255,0.04); padding:6px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.06);">
+          <div style="color:#94a3b8; font-size:0.65rem; text-transform:uppercase;">${s[0]}</div>
+          <div style="color:#ffffff; font-weight:600; font-family:monospace;">${s[1]}</div>
+        </div>
+      `).join('');
+
+      document.getElementById('popSequence').innerText = data.seq;
+      document.getElementById('matchPopover').classList.add('active');
+
+      const demo = document.getElementById('macbook-demo');
+      if (demo) {
+        demo.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    function closeMatch() {
+      document.getElementById('matchPopover').classList.remove('active');
+    }
+
+    function setSpeed(speed, btn) {
+      const track = document.getElementById('tickerTrack');
+      track.classList.remove('speed-normal', 'speed-relaxed', 'speed-static');
+      if (speed === 'normal') track.classList.add('speed-normal');
+      if (speed === 'relaxed') track.classList.add('speed-relaxed');
+      if (speed === 'static') track.classList.add('speed-static');
+
+      btn.parentElement.querySelectorAll('.segment-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function setRefresh(rate, btn) {
+      document.getElementById('rateLabel').innerText = (rate === '1s' ? '⚡ 1S LIVE' : rate.toUpperCase());
+      btn.parentElement.querySelectorAll('.segment-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function downloadApp() {
+      alert("Fan Notch for macOS (v1.4.2 Universal Binary)\n\nOpening disk image installer...");
+    }
+  </script>
+</body>
+</html>
